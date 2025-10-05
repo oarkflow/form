@@ -17,8 +17,8 @@ func newForm(raw string) *form {
 	}
 }
 
-func (f *form) decode() (map[string]interface{}, error) {
-	vals := make(map[string]interface{})
+func (f *form) decode() (map[string]any, error) {
+	vals := make(map[string]any)
 	keyBuffer := make([]byte, 0, len(f.raw))
 	valBuffer := make([]byte, 0, len(f.raw))
 
@@ -42,7 +42,7 @@ func (f *form) decode() (map[string]interface{}, error) {
 	return f.parseArray(vals), nil
 }
 
-func (f *form) insertValue(destP *map[string]interface{}, key, val string) {
+func (f *form) insertValue(destP *map[string]any, key, val string) {
 	key, _ = url.PathUnescape(key)
 	var path []string
 	if strings.IndexByte(key, '[') >= 0 || strings.IndexByte(key, ']') >= 0 {
@@ -77,8 +77,8 @@ func (f *form) insertValue(destP *map[string]interface{}, key, val string) {
 			k = string(rune(f.pathCache[c] + '0'))
 			f.pathCache[c]++
 		}
-		if next, ok := dest[k].(map[string]interface{}); !ok {
-			next = make(map[string]interface{})
+		if next, ok := dest[k].(map[string]any); !ok {
+			next = make(map[string]any)
 			dest[k] = next
 			dest = next
 		} else {
@@ -93,8 +93,8 @@ func (f *form) insertValue(destP *map[string]interface{}, key, val string) {
 	dest[last] = val
 }
 
-func (f *form) parseArrayItem(dest map[string]interface{}) interface{} {
-	var arr []interface{}
+func (f *form) parseArrayItem(dest map[string]any) any {
+	var arr []any
 	for i := 0; ; i++ {
 		key := string(rune(i + '0'))
 		item, ok := dest[key]
@@ -109,15 +109,15 @@ func (f *form) parseArrayItem(dest map[string]interface{}) interface{} {
 	return arr
 }
 
-func (f *form) parseArray(dest map[string]interface{}) map[string]interface{} {
+func (f *form) parseArray(dest map[string]any) map[string]any {
 	for k, v := range dest {
-		if mv, ok := v.(map[string]interface{}); ok {
+		if mv, ok := v.(map[string]any); ok {
 			dest[k] = f.parseArrayItem(f.parseArray(mv))
 		}
 	}
 	return dest
 }
 
-func DecodeForm(src []byte) (map[string]interface{}, error) {
+func DecodeForm(src []byte) (map[string]any, error) {
 	return newForm(string(src)).decode()
 }
